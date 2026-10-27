@@ -47,7 +47,7 @@ dsh-pet 本身没有音频：不会说话，也听不见你。这个项目补上
 前置：已经装好 **dsh-pet**（桌面 profile），并且有 Python 3.10+。
 
 ```bash
-git clone https://github.com/<you>/dsh-pet-voice.git
+git clone https://github.com/mingganor/dsh-pet-voice.git
 cd dsh-pet-voice
 
 # 1) 依赖
