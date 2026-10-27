@@ -1,0 +1,7 @@
+faster-whisper==1.2.1
+av==13.1.0
+sounddevice>=0.5
+opencc-python-reimplemented>=0.1.7
+numpy>=1.26
+sherpa-onnx==2.0.1
+edge-tts>=7.2

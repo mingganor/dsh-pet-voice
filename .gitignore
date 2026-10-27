@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# 运行时 / 隐私 —— 绝对不要提交
+pet-voiceprint.json
+pet-voice-cache/
+pet-voice.log
+pet-listen.log
+memory.json
+
+# 模型（安装时下载）
+*.onnx
+models/

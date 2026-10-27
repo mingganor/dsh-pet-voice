@@ -1,0 +1,31 @@
+# NOTICE
+
+本仓库的代码（`src/`、`scripts/`、`install.sh`）以 MIT 许可发布。
+
+## 上游
+
+- **dsh-pet** — https://github.com/PC2005-cloud/dsh-pet
+  代码 MIT（Copyright (c) 2026 PC2005-cloud）。本仓库**不包含** dsh-pet 的代码或美术素材，
+  只提供一个在运行时给本机已安装插件打「壳」的补丁器。
+  如果你分发的是打补丁后的整包，那份 dsh-pet 代码仍适用其 MIT 许可，需保留原版权声明。
+
+- **dsh-pet 美术素材**（动画 / 提示词 / 源视频）
+  上游 README 标注：允许开源使用、**禁止商用**（CC BY-NC-SA 4.0）。
+  本仓库**不包含**这些素材；README 中的演示图/录像如出现角色形象，仅为说明用途，
+  版权归原作者，转载/再分发请遵守 CC BY-NC-SA 4.0（署名 + 非商业 + 相同方式共享）。
+
+## 第三方依赖
+
+| 依赖 | 许可 | 用途 |
+|---|---|---|
+| faster-whisper | MIT | 本地语音识别 |
+| OpenAI Whisper 模型权重 | MIT | 识别模型（首次运行时下载） |
+| Silero VAD（随 faster-whisper 分发） | MIT | 人声检测 |
+| sherpa-onnx | Apache-2.0 | 声纹推理运行时 |
+| 3D-Speaker CAM++（`campplus.onnx`） | Apache-2.0 | 声纹模型（安装时下载） |
+| edge-tts | LGPL-3.0 | 神经网络语音合成（**以依赖形式调用，未修改、未内联**） |
+| OpenCC (`opencc-python-reimplemented`) | Apache-2.0 | 繁转简 |
+| sounddevice | MIT | 麦克风采集 |
+| NumPy | BSD-3-Clause | 音频处理 |
+
+模型权重不随本仓库分发；`install.sh` 会从公开地址下载。使用/再分发模型时请遵守其原始许可与署名要求。
