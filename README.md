@@ -5,7 +5,7 @@
 
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 ![python](https://img.shields.io/badge/python-3.10%2B-3776AB.svg)
-![platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)
+![platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey.svg)
 
 <!-- 演示：把录屏存成 docs/demo.gif 后，取消下面这行注释
 ![demo](docs/demo.gif)
@@ -20,6 +20,16 @@ dsh-pet 本身没有音频：不会说话，也听不见你。这个项目补上
 - **只认你**：CAM++ 声纹门控，别人说话不接（在识别之前就挡掉，省 CPU）
 - **说得好**：edge-tts 按台词情绪切 5 种声线，命中缓存直接播
 - **坏不了**：语音逻辑放在插件之外，升级覆盖后一条命令补回，并自带六项体检
+
+## 平台支持
+
+| 平台 | 状态 | 说明 |
+|---|---|---|
+| macOS | ✅ 实测 | 播放用系统自带 `afplay`；`scripts/macos/*.command` 双击即用；`health.py --restart` 能自动重启桌面端 |
+| Linux | ⚠️ 理论可用，未实测 | 播放器自动在 `paplay` / `aplay` / `ffplay` 里挑；没有 `.command`，直接跑命令；重启请手动 |
+| Windows | ⚠️ 未实测，建议 WSL | 原生需要 `ffplay`（ffmpeg），且 `install.sh` 是 bash 脚本；WSL 里按 Linux 走，但麦克风要转发（PulseAudio） |
+
+录音、VAD、Whisper、声纹、TTS 都是纯 Python，本身跨平台；差异只在**播放器**、**进程检查**和**快捷方式**三处。
 
 ## 架构
 
@@ -46,6 +56,8 @@ dsh-pet 本身没有音频：不会说话，也听不见你。这个项目补上
 
 前置：已经装好 **dsh-pet**（桌面 profile），并且有 Python 3.10+。
 
+### macOS / Linux
+
 ```bash
 git clone https://github.com/mingganor/dsh-pet-voice.git
 cd dsh-pet-voice
@@ -56,12 +68,26 @@ python3 -m pip install -r requirements.txt
 # 2) 安装（复制到 ~/.dsh + 下载声纹模型 + 给插件打壳）
 bash install.sh
 #   如果默认 python3 没装依赖：PET_PYTHON=/path/to/python bash install.sh
+#   报权限问题：chmod +x install.sh
 
 # 3) 重启 DSH 桌面端
 
 # 4) 录一次声纹（读 5 句）
 python3 ~/.dsh/pet-voiceid.py --enroll
 ```
+
+### Windows
+
+原生未实测，推荐 WSL（按 Linux 走）。要在原生 Windows 跑，步骤等价，只是路径换成 `%USERPROFILE%\.dsh`：
+
+1. 装 ffmpeg（提供 `ffplay`，用来播放 TTS 音频）
+2. `src\pet-listen.py`、`src\pet-speak.py`、`src\pet-voiceid.py` → `%USERPROFILE%\.dsh\`
+3. `src\bridge\` 下三个文件 → `%USERPROFILE%\.dsh\pet-bridge\`
+4. 把 Python 解释器路径单写一行到 `%USERPROFILE%\.dsh\pet-python`
+5. `campplus.onnx` 下载到 `%USERPROFILE%\.dsh\models\`
+6. `python %USERPROFILE%\.dsh\pet-bridge\install.py --apply`
+
+`install.py` / `health.py` 都是纯 Python，路径用 `expanduser("~")`，Windows 下同样成立；只有 `--restart` 是 macOS 专属。
 
 ## 日常使用
 
@@ -74,7 +100,7 @@ python3 ~/.dsh/pet-voiceid.py --enroll
 | 体检 | `python3 ~/.dsh/pet-bridge/health.py --check` |
 | 插件升级后补壳 | `python3 ~/.dsh/pet-bridge/install.py --apply` |
 
-macOS 用户可以把 `scripts/macos/*.command` 拷到桌面，双击即用（总控台 / 一键开启 / 体检 / 声纹）。
+macOS 用户可以把 `scripts/macos/*.command` 拷到桌面，双击即用（总控台 / 一键开启 / 体检 / 声纹）；Linux / Windows 直接用上表命令。
 
 ## 配置
 
@@ -102,7 +128,9 @@ macOS 用户可以把 `scripts/macos/*.command` 拷到桌面，双击即用（�
 
 ## 已知限制
 
-- 以 macOS 为主（`.command` 是 macOS 快捷方式；核心 Python 代码跨平台，但麦克风权限/设备名要自己调）
+- 平台：macOS 实测；Linux 理论可用（播放器自动选，未实测）；Windows 建议 WSL
+- macOS 专属：`scripts/macos/*.command` 快捷方式、`health.py --restart`（依赖 `open -a` 与 SingletonLock）
+- 麦克风设备名/权限各平台不同，必要时在 `pet-listen.json` 里指定 `device`
 - 首次加载 Whisper 模型约 30–180 秒（之后 1–2 秒）
 - 连续 20 秒的背景人声会整段解码（录了声纹后会在校验阶段被挡掉）
 - 声纹阈值需要按人校准：同人通常 0.7–0.95，不同人 0.2–0.5

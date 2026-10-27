@@ -37,7 +37,13 @@ def ping(timeout=1.5):
 def ear_alive():
     try:
         p = subprocess.run(["pgrep", "-f", "pet-listen.py"], capture_output=True, text=True)
-        return bool(p.stdout.strip())
+        return p.returncode == 0 and bool(p.stdout.strip())
+    except FileNotFoundError:
+        # 没有 pgrep（例如 Windows）：退化成「日志最近 6 小时更新过」
+        try:
+            return (time.time() - os.path.getmtime(EAR_LOG)) < 6 * 3600
+        except OSError:
+            return False
     except Exception:
         return False
 
@@ -119,6 +125,10 @@ APP_LOCK = os.path.join(HOME, "Library/Application Support/@deepseek-ai/dsh-desk
 
 
 def run_restart():
+    if sys.platform != "darwin":
+        print("自动重启只支持 macOS（用到了 open -a 和 SingletonLock）。")
+        print("请手动退出 DSH 再打开，然后跑 health.py --check。")
+        return 1
     print("→ 关闭 DSH 桌面端…")
     subprocess.run(["pkill", "-f", "DeepSeek Harness"], capture_output=True)
     # 等旧实例真的退干净，否则 open 会把事件丢给正在退出的那个

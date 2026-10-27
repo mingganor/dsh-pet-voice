@@ -75,6 +75,13 @@ pet-listen.py                    宿主进程 (DSH)                  pet-speak.p
 | 反复复读一句 | 噪声段 + 解码设置 | 已默认关 `condition_on_previous_text` |
 | 她自问自答 | TTS 外放被麦克风收进去 | `~/.dsh/pet-speaking` 标记 + 30s 窗口 |
 
+## 跨平台
+
+- **播放**：`pet-speak.py` 按平台选 `afplay`（macOS）/ `paplay`、`aplay`、`ffplay`（Linux）/ `ffplay`（Windows）
+- **进程检查**：`health.py` 优先 `pgrep`；没有 `pgrep` 的平台退化成看日志更新时间
+- **重启**：仅 macOS（`open -a` + SingletonLock）
+- **快捷方式**：`scripts/macos/` 仅 macOS，其他平台直接用命令
+
 ## 目录
 
 ```

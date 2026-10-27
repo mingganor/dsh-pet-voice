@@ -13,6 +13,7 @@ import re
 import json
 import time
 import asyncio
+import shutil
 import subprocess
 
 HOME = os.path.expanduser("~")
@@ -168,6 +169,26 @@ async def synth_edge(text, voice, rate, pitch, volume, out):
 SPEAKING_FLAG = os.path.join(HOME, ".dsh/pet-speaking")
 
 
+def _player_cmd(path):
+    """按平台挑播放器；返回 None 表示一个都没有。
+
+    macOS: afplay（系统自带）
+    Linux: paplay / aplay / ffplay（有哪个用哪个）
+    Windows: ffplay（需安装 ffmpeg；没有就不出声，不静默假装成功）
+    """
+    if sys.platform == "darwin":
+        return ["afplay", path] if shutil.which("afplay") else None
+    if sys.platform.startswith("win"):
+        if shutil.which("ffplay"):
+            return ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", path]
+        return None
+    for cmd in (["paplay", path], ["aplay", "-q", path],
+                ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet", path]):
+        if shutil.which(cmd[0]):
+            return cmd
+    return None
+
+
 def play(path):
     """播放期间立个牌子，让耳朵别把自己说的话当成人话收进去"""
     try:
@@ -176,7 +197,12 @@ def play(path):
     except Exception:
         pass
     try:
-        subprocess.run(["afplay", path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        cmd = _player_cmd(path)
+        if cmd is None:
+            print("找不到可用播放器（macOS: afplay；Linux: paplay/aplay/ffplay；"
+                  "Windows: 装 ffmpeg 提供 ffplay）", file=sys.stderr)
+        else:
+            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     finally:
         try:
             os.remove(SPEAKING_FLAG)
@@ -185,9 +211,14 @@ def play(path):
 
 
 def say_fallback(text, cfg):
-    subprocess.run(["say", "-v", str(cfg.get("fallbackVoice", "Tingting")),
-                    "-r", str(cfg.get("fallbackRate", 190)), text],
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    """edge-tts 不可用时的兜底：macOS 用 say，Linux 用 espeak-ng，其它平台放弃。"""
+    if sys.platform == "darwin":
+        subprocess.run(["say", "-v", str(cfg.get("fallbackVoice", "Tingting")),
+                        "-r", str(cfg.get("fallbackRate", 190)), text],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    elif sys.platform.startswith("linux") and shutil.which("espeak-ng"):
+        subprocess.run(["espeak-ng", "-v", "cmn", text],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def main():
